@@ -36,6 +36,45 @@ describe('Book Favorites App', () => {
     cy.get('h2').contains('My Favorite Books').should('exist');
   });
 
+  it('removes favorites from both views and keeps them after a failed request', () => {
+    const removalUser = {
+      username: `remove${Date.now()}${Math.floor(Math.random() * 10000)}`,
+      password: 'removal-test-password',
+    };
+    cy.request('POST', 'http://localhost:4000/api/register', removalUser);
+    cy.contains('Login').click();
+    cy.get('input[name="username"]').type(removalUser.username);
+    cy.get('input[name="password"]').type(removalUser.password);
+    cy.get('button#login').click();
+    cy.contains('Books').click();
+    cy.intercept('POST', '**/api/favorites').as('addFavorite');
+    cy.intercept('DELETE', '**/api/v1/favorites/*').as('removeFavorite');
+
+    cy.contains('button', 'Add to Favorites').first().click();
+    cy.wait('@addFavorite');
+    cy.contains('button', 'Remove from Favorites').should('exist').click();
+    cy.wait('@removeFavorite').its('response.statusCode').should('eq', 200);
+    cy.contains('button', 'Remove from Favorites').should('not.exist');
+
+    cy.contains('button', 'Add to Favorites').first().click();
+    cy.wait('@addFavorite');
+    cy.contains('button', 'Remove from Favorites').should('exist');
+    cy.get('a#favorites-link').click();
+    cy.contains('button', 'Remove from Favorites').should('exist');
+    cy.intercept({ method: 'DELETE', url: '**/api/v1/favorites/*', times: 1 }, {
+      statusCode: 500,
+      body: { message: 'Removal failed' },
+    }).as('failedRemoval');
+    cy.contains('button', 'Remove from Favorites').click();
+    cy.wait('@failedRemoval');
+    cy.get('[role="alert"]').should('contain', 'Failed to remove favorite');
+    cy.contains('button', 'Remove from Favorites').should('exist').click();
+    cy.wait('@removeFavorite').its('response.statusCode').should('eq', 200);
+    cy.contains('No favorite books yet.').should('exist');
+    cy.reload();
+    cy.contains('No favorite books yet.').should('exist');
+  });
+
   it('should logout and protect routes', () => {
     // Login first
     cy.contains('Login').click();

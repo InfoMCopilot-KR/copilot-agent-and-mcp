@@ -111,4 +111,48 @@ describe('Favorites API', () => {
       .send({ bookId: '1' });
     expect(res.statusCode).toBe(401);
   });
+
+  it('DELETE /api/v1/favorites/:bookId removes only the requested favorite and persists it', async () => {
+    const original = fs.readFileSync(usersFile, 'utf-8');
+    try {
+      const users = JSON.parse(original);
+      const user = users.find(u => u.username === 'sandra');
+      const [first, second] = JSON.parse(fs.readFileSync(booksFile, 'utf-8'));
+      user.favorites = [first.id, second.id, first.id];
+      fs.writeFileSync(usersFile, JSON.stringify(users));
+
+      const token = getToken('sandra');
+      const res = await request(app)
+        .delete(`/api/v1/favorites/${first.id}`)
+        .set('Authorization', 'Bearer ' + token);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.message).toMatch(/removed/);
+      const saved = JSON.parse(fs.readFileSync(usersFile, 'utf-8'));
+      expect(saved.find(u => u.username === 'sandra').favorites).toEqual([second.id]);
+      expect(saved.filter(u => u.username !== 'sandra')).toEqual(users.filter(u => u.username !== 'sandra'));
+
+      const favorites = await request(app)
+        .get('/api/favorites')
+        .set('Authorization', 'Bearer ' + token);
+      expect(favorites.body.map(book => book.id)).toEqual([second.id]);
+      const repeated = await request(app)
+        .delete(`/api/v1/favorites/${first.id}`)
+        .set('Authorization', 'Bearer ' + token);
+      expect(repeated.statusCode).toBe(200);
+    } finally {
+      fs.writeFileSync(usersFile, original);
+    }
+  });
+
+  it('DELETE /api/v1/favorites/:bookId requires authentication', async () => {
+    const res = await request(app).delete('/api/v1/favorites/1');
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('DELETE /api/v1/favorites/:bookId returns 404 for a non-existent user', async () => {
+    const res = await request(app)
+      .delete('/api/v1/favorites/1')
+      .set('Authorization', 'Bearer ' + getToken('nouser'));
+    expect(res.statusCode).toBe(404);
+  });
 });

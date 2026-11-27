@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchBooks } from '../store/booksSlice';
-import { addFavorite, fetchFavorites } from '../store/favoritesSlice';
+import { addFavorite, fetchFavorites, removeFavorite } from '../store/favoritesSlice';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/BookList.module.css';
 
@@ -13,6 +13,8 @@ const BookList = () => {
   const token = useAppSelector(state => state.user.token);
   const navigate = useNavigate();
   const favorites = useAppSelector(state => state.favorites.items);
+  const removing = useAppSelector(state => state.favorites.removing);
+  const removeError = useAppSelector(state => state.favorites.removeError);
 
   useEffect(() => {
     if (!token) {
@@ -38,6 +40,7 @@ const BookList = () => {
   return (
     <div>
       <h2>Books</h2>
+      {removeError && <p role="alert">Failed to remove favorite. Please try again.</p>}
       {books.length === 0 ? (
         <div style={{
           background: '#fff',
@@ -69,9 +72,12 @@ const BookList = () => {
                 <div className={styles.bookAuthor}>by {book.author}</div>
                 <button
                   className={styles.simpleBtn}
-                  onClick={() => handleAddFavorite(book.id)}
+                  onClick={() => isFavorite
+                    ? dispatch(removeFavorite({ token, bookId: book.id }))
+                    : handleAddFavorite(book.id)}
+                  disabled={removing.includes(book.id)}
                 >
-                  {isFavorite ? 'In Favorites' : 'Add to Favorites'}
+                  {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                 </button>
               </div>
             );

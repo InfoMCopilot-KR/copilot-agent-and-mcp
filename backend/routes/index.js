@@ -9,6 +9,7 @@ function createApiRouter(deps) {
   router.use('/', createAuthRouter(deps));
   router.use('/books', createBooksRouter(deps));
   router.use('/favorites', createFavoritesRouter(deps));
+  router.use('/v1/favorites', createFavoritesRouter(deps));
 
   return router;
 }

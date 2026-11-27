@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchFavorites } from '../store/favoritesSlice';
+import { fetchFavorites, removeFavorite } from '../store/favoritesSlice';
 import { useNavigate } from 'react-router-dom';
 
 const Favorites = () => {
   const dispatch = useAppDispatch();
   const favorites = useAppSelector(state => state.favorites.items);
   const status = useAppSelector(state => state.favorites.status);
+  const removing = useAppSelector(state => state.favorites.removing);
+  const removeError = useAppSelector(state => state.favorites.removeError);
   const token = useAppSelector(state => state.user.token);
   const navigate = useNavigate();
 
@@ -24,6 +26,7 @@ const Favorites = () => {
   return (
     <div>
       <h2>My Favorite Books</h2>
+      {removeError && <p role="alert">Failed to remove favorite. Please try again.</p>}
       {favorites.length === 0 ? (
         <div style={{
           background: '#fff',
@@ -45,6 +48,13 @@ const Favorites = () => {
           {favorites.map(book => (
             <li key={book.id}>
               <strong>{book.title}</strong> by {book.author}
+              {' '}
+              <button
+                onClick={() => dispatch(removeFavorite({ token, bookId: book.id }))}
+                disabled={removing.includes(book.id)}
+              >
+                Remove from Favorites
+              </button>
             </li>
           ))}
         </ul>

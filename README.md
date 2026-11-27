@@ -8,7 +8,7 @@
 Book Favorites is a full-stack web application that allows users to:
 - Register for a new account or log in with existing credentials
 - Browse a curated list of 50 books
-- Add books from their personal favorites list
+- Add or remove books from their personal favorites list
 - View their favorite books in a dedicated section
 - Enjoy a clean, modern, and responsive user interface
 - Experience protected routes (only logged-in users can access book and favorites pages)
@@ -33,6 +33,14 @@ Book Favorites is a full-stack web application that allows users to:
   - Responsive design for desktop and mobile
   - Clear empty states and error handling
   - Modern UI/UX with attention to navigation and feedback
+
+### Favorites removal API
+
+`DELETE /api/v1/favorites/:bookId` removes a book from the authenticated user's favorites.
+Authenticate with the login token using HTTP bearer authentication.
+A successful or repeated removal returns HTTP 200; an unknown user returns HTTP 404.
+The existing unversioned favorites
+route also supports the same removal operation.
 
 ---
 
@@ -83,4 +91,4 @@ Book Favorites is a full-stack web application that allows users to:
 
 6. **Usage:**
    - Register a new account or log in with an existing one (`sandra`/`sandra`)).
-   - Browse books, add favorites, and enjoy the app!
+   - Browse books and add or remove favorites from the book list or favorites page.

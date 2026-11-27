@@ -112,7 +112,7 @@ describe('Favorites API', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('DELETE /api/favorites/:bookId removes only the requested favorite and persists it', async () => {
+  it('DELETE /api/v1/favorites/:bookId removes only the requested favorite and persists it', async () => {
     const original = fs.readFileSync(usersFile, 'utf-8');
     try {
       const users = JSON.parse(original);
@@ -123,7 +123,7 @@ describe('Favorites API', () => {
 
       const token = getToken('sandra');
       const res = await request(app)
-        .delete(`/api/favorites/${first.id}`)
+        .delete(`/api/v1/favorites/${first.id}`)
         .set('Authorization', 'Bearer ' + token);
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toMatch(/removed/);
@@ -136,7 +136,7 @@ describe('Favorites API', () => {
         .set('Authorization', 'Bearer ' + token);
       expect(favorites.body.map(book => book.id)).toEqual([second.id]);
       const repeated = await request(app)
-        .delete(`/api/favorites/${first.id}`)
+        .delete(`/api/v1/favorites/${first.id}`)
         .set('Authorization', 'Bearer ' + token);
       expect(repeated.statusCode).toBe(200);
     } finally {
@@ -144,14 +144,14 @@ describe('Favorites API', () => {
     }
   });
 
-  it('DELETE /api/favorites/:bookId requires authentication', async () => {
-    const res = await request(app).delete('/api/favorites/1');
+  it('DELETE /api/v1/favorites/:bookId requires authentication', async () => {
+    const res = await request(app).delete('/api/v1/favorites/1');
     expect(res.statusCode).toBe(401);
   });
 
-  it('DELETE /api/favorites/:bookId returns 404 for a non-existent user', async () => {
+  it('DELETE /api/v1/favorites/:bookId returns 404 for a non-existent user', async () => {
     const res = await request(app)
-      .delete('/api/favorites/1')
+      .delete('/api/v1/favorites/1')
       .set('Authorization', 'Bearer ' + getToken('nouser'));
     expect(res.statusCode).toBe(404);
   });
